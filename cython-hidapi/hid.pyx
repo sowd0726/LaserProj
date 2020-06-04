@@ -49,7 +49,7 @@ cdef class device:
 
   def write(self, buff):
       '''Accept a list of integers (0-255) and send them to the device'''
-#      buff = ''.join(map(chr, buff)) # convert to bytes
+      buff = bytearray(buff)
       cdef unsigned char* cbuff = buff # covert to c string
       return hid_write(self._c_hid, cbuff, len(buff))
 
@@ -93,7 +93,7 @@ cdef class device:
 
   def send_feature_report(self, buff):
       '''Accept a list of integers (0-255) and send them to the device'''
-#      buff = ''.join(map(chr, buff)) # convert to bytes
+      buff = bytearray( buff )
       cdef unsigned char* cbuff = buff # covert to c string
       return hid_send_feature_report(self._c_hid, cbuff, len(buff))
 

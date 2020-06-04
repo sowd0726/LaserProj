@@ -24,9 +24,8 @@ class USBIO:
         data[3] = 2
         data[4] = p2
         data[63] =89    # dummy to confirm USB-IO recognition
-        ba = bytearray( data )
         self.lock.acquire() # make sure just a thread using USB
-        self.usb.write(ba)
+        self.usb.write(data)
         self.lock.release()
         return(self.usb.read(64))
 
@@ -54,10 +53,6 @@ class C28BYJ48():
         self.mSeq = [[1,0,0,1],[1,0,0,0],[1,1,0,0],[0,1,0,0],[0,1,1,0],[0,0,1,0],[0,0,1,1],[0,0,0,1]]
         #default speed = max speed
         self.SetWaitTime(0.001)
-        #Since Host does not know the current position of rotater.
-        #Try all positions to bring the rotater to synchronize with host
-        self.Step(7,0.03)
-        self.Step(-7,0.03)
 
     def SetPinsVoltage(self, nSeq):
         for pin in range(0, 4):
