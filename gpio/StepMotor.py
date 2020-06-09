@@ -17,15 +17,16 @@ class USBIO:
         self.pin = [0] *12
 
     def writePin(self,p1,p2):   # Prioro to use this , all pins need to be configured as output pins
-        data = [int(0)] * 64
+        data = [0] * 64
         data[0] = self.CMD_READ_WRITE
         data[1] = 1
         data[2] = p1
         data[3] = 2
         data[4] = p2
         data[63] =89    # dummy to confirm USB-IO recognition
+        ba = bytearray( data )
         self.lock.acquire() # make sure just a thread using USB
-        self.usb.write(data)
+        self.usb.write(ba)
         self.lock.release()
         return(self.usb.read(64))
 
@@ -46,11 +47,13 @@ class C28BYJ48():
     def __init__(self, IN1, IN2, IN3, IN4):
         self.mPin = [IN1, IN2, IN3, IN4]     # USBIO pin number 4 of 0-12
         self.stepThread=None
+        self.accelThread=None
 
         #Setting related Sequence
         #1step angle = 1/4096[deg]
         self.nPos = 0
         self.mSeq = [[1,0,0,1],[1,0,0,0],[1,1,0,0],[0,1,0,0],[0,1,1,0],[0,0,1,0],[0,0,1,1],[0,0,0,1]]
+
         #default speed = max speed
         self.SetWaitTime(0.001)
 
@@ -74,6 +77,7 @@ class C28BYJ48():
             self.SetPinsVoltage(self.nPos % 8)
             UsbIO.outputToPin()
             time.sleep(self.mStep_wait)
+            stepThread=None
 
 # Entry point to control the stepping motor.
 
@@ -84,6 +88,39 @@ class C28BYJ48():
 
         self.stepThread = threading.Thread( target=self.Step, args=(step,wait ) )
         self.stepThread.start()
+
+    def accelStep( self , step ,wait):
+        if step < 0 :
+            posneg=-1
+        else:
+            posneg=1
+        if abs(step) > 40 :
+            self.Step( 10*posneg , 0.01 )
+            self.Step( 5 *posneg , 0.003 )
+            self.Step( 5 *posneg , 0.001 )
+            mStep = abs(step)-40
+            self.Step( mStep*posneg , 0.0005 )
+            self.Step( 5 *posneg , 0.001 )
+            self.Step( 5 *posneg , 0.003 )
+            self.Step( 10 *posneg , 0.01 )
+
+        else :
+            self.ThreadStep( step , wait=0.01 )
+        accelThread=None
+
+    def ThreadAccelStep( self , step ):
+        if self.accelThread!=None:
+# When modarknet.network_width(netMain)tor is moving , it wait the end of moving before creating thread.
+            self.accelThread.join()
+        self.accelThread = threading.Thread( target=self.accelStep, args=(step,0.01 ) )
+        self.accelThread.start()
+
+
+    def ThreadWait(self ):
+        if self.stepThread!=None:
+# When motor is moving , it wait the end of moving before creating thread.
+            self.stepThread.join()
+
 
 
 

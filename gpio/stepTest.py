@@ -8,8 +8,8 @@ if __name__ == '__main__':
     StepMotorY = StepMotor.C28BYJ48(IN1=0 ,IN2=1, IN3=2, IN4=3)
     StepMotorX = StepMotor.C28BYJ48(IN1=4, IN2=5, IN3=6, IN4=7)
     #Main loop
-    StepMotorX.ThreadStep( int(args[1]),0.0010)
-    StepMotorY.ThreadStep( int(args[2]),0.0010)
+    StepMotorX.ThreadAccelStep( int(args[1]))
+    StepMotorY.ThreadAccelStep( int(args[2]))
     #StepMoterY.Step(int(args[2]),0.0005)
 
     StepMotorX.Cleanup()
