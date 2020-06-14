@@ -46,7 +46,6 @@ UsbIO=USBIO(  )   # To use USBIO as a kind of singleton
 class C28BYJ48():
     def __init__(self, IN1, IN2, IN3, IN4):
         self.mPin = [IN1, IN2, IN3, IN4]     # USBIO pin number 4 of 0-12
-        self.stepThread=None
         self.accelThread=None
 
         #Setting related Sequence
@@ -77,17 +76,9 @@ class C28BYJ48():
             self.SetPinsVoltage(self.nPos % 8)
             UsbIO.outputToPin()
             time.sleep(self.mStep_wait)
-            stepThread=None
 
 # Entry point to control the stepping motor.
 
-    def ThreadStep( self , step , wait ):
-        if self.stepThread!=None:
-# When motor is moving , it wait the end of moving before creating thread.
-            self.stepThread.join()
-
-        self.stepThread = threading.Thread( target=self.Step, args=(step,wait ) )
-        self.stepThread.start()
 
     def accelStep( self , step ,wait):
         if step < 0 :
@@ -105,7 +96,7 @@ class C28BYJ48():
             self.Step( 10 *posneg , 0.01 )
 
         else :
-            self.ThreadStep( step , wait=0.01 )
+            self.Step( step , wait=0.01 )
         accelThread=None
 
     def ThreadAccelStep( self , step ):
@@ -117,17 +108,17 @@ class C28BYJ48():
 
 
     def ThreadWait(self ):
-        if self.stepThread!=None:
+        if self.accelThread!=None:
 # When motor is moving , it wait the end of moving before creating thread.
-            self.stepThread.join()
+            self.accelThread.join()
 
 
 
 
     def Cleanup(self):
-        if self.stepThread!=None:
+        if self.accelThread!=None:
 # When motor is moving , it wait the end of moving before creating thread.
-            self.stepThread.join()
+            self.accelThread.join()
         for pin in range(0, 4):
             UsbIO.setPinLevel( self.mPin[pin] , 0 )
         UsbIO.outputToPin()
